@@ -1,0 +1,34 @@
+@startuml CONTEXT_AWS_REFARCH
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' Boundary(alias, label, ?type, ?tags, $link)
+' Enterprise_Boundary(alias, label, ?tags, $link)
+' System_Boundary
+
+' Person{_Ext}(alias, label, ?descr, ?sprite, ?tags, $link)
+' System(alias, label, ?descr, ?sprite, ?tags, $link)
+
+Title Amazon Web Services - Reference Architecture - Context Diagram
+
+Person("USER", "User", "Conceptual System User")
+Boundary("AWS", "AWS", "Cloud") {
+ System("AWS_IAM", "IAM", "Identity and Access Management") 
+ Boundary("AWS_REGION", "Region", "Geographical Region") {
+  Boundary("AWS_AZ", "Availability Zone", "Virtual Availability Zone") {
+   System("AWS_S3", "S3", "Simple Storage Service")
+   System("AWS_EC2", "EC2", "Elastic Cloud Compute") 
+  }
+ }
+}
+
+Rel_R(USER, "AWS_IAM", "Provides Credentials")
+Rel_R("AWS_IAM", "AWS_S3", "Allows Access")
+Rel_R("AWS_IAM", "AWS_EC2", "Allows Access")
+Lay_D("AWS_EC2", "AWS_S3")
+@enduml
+
