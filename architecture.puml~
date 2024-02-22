@@ -1,0 +1,133 @@
+@startuml CONTEXT_AWS_REFARCH
+!include <C4/C4.puml>
+!include <C4/C4_Context.puml>
+!include <C4/C4_Container.puml>
+!include <C4/C4_Component.puml>
+!include <C4/C4_Dynamic.puml>
+!include <C4/C4_Deployment.puml>
+
+' Boundary(alias, label, ?type, ?tags, $link)
+' Enterprise_Boundary(alias, label, ?tags, $link)
+' System_Boundary
+
+' Person{_Ext}(alias, label, ?descr, ?sprite, ?tags, $link)
+' System(alias, label, ?descr, ?sprite, ?tags, $link)
+
+Title Amazon Web Services - Reference Architecture - Context Diagram
+
+Person("USER", "User", "Conceptual System User")
+Boundary("AWS", "AWS", "Cloud") {
+ System("AWS_IAM", "IAM", "Identity and Access Management") 
+ Boundary("AWS_REGION", "Region", "Geographical Region") {
+  Boundary("AWS_AZ", "Availability Zone", "Virtual Availability Zone") {
+   System("AWS_S3", "S3", "Simple Storage Service")
+   System("AWS_EC2", "EC2", "Elastic Cloud Compute") 
+  }
+ }
+}
+
+Rel_R(USER, "AWS_IAM", "Provides Credentials")
+Rel_R("AWS_IAM", "AWS_S3", "Allows Access")
+Rel_R("AWS_IAM", "AWS_EC2", "Allows Access")
+Lay_D("AWS_EC2", "AWS_S3")
+@enduml
+
+@startuml CONTEXT_AWS_CLIENT
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' Boundary(alias, label, ?type, ?tags, $link)
+' Enterprise_Boundary(alias, label, ?tags, $link)
+' System_Boundary
+
+' Person{_Ext}(alias, label, ?descr, ?sprite, ?tags, $link)
+' System(alias, label, ?descr, ?sprite, ?tags, $link)
+
+Title AWS Client - Solution Architecture - Context Diagram
+
+Boundary("HOME", "Home", "Location") {
+ Person("MANUSR", "Managed User", "Conceptual System User")
+ Boundary("K8S", "Kubernetes", "Cluster") {
+  System("AWSC", "AWS Client", "AWS Client Container")
+ }
+}
+
+Boundary("AWS", "AWS", "Cloud") {
+ System("AWS_IAM", "IAM", "Identity and Access Management")
+ Boundary("AWS_REGION", "Region", "Geographical Region") {
+  Boundary("AWS_AZ", "Availability Zone", "Virtual Availability Zone") {
+   System("AWS_S3", "S3", "Simple Storage Service")
+   System("AWS_EC2", "EC2", "Elastic Cloud Compute")
+  }
+ }
+}
+
+Rel_R("MANUSR", "AWSC", "Uses")
+Rel_R("AWSC", "AWS_IAM", "Authenticates")
+Rel_R("AWSC", "AWS_S3", "Manages")
+Rel_R("AWSC", "AWS_EC2", "Manages")
+Rel_R("AWS_IAM", "AWS_S3", "Allows Access")
+Rel_R("AWS_IAM", "AWS_EC2", "Allows Access")
+Lay_D("AWS_EC2", "AWS_S3")
+
+@enduml
+
+
+@startuml CONTAINER_AWS_CLIENT
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' Boundary(alias, label, ?type, ?tags, $link)
+' Enterprise_Boundary(alias, label, ?tags, $link)
+' System_Boundary
+
+' Person{_Ext}(alias, label, ?descr, ?sprite, ?tags, $link)
+' System(alias, label, ?descr, ?sprite, ?tags, $link)
+
+
+
+Title AWS Client - Solution Architecture - Container Diagram
+
+Boundary("K8S", "Kubernetes", "Cluster") {
+ Boundary("K8S_INGRESS", "Ingress") {
+  Container('INGRESS', 'cloud.aws', 'http', "Generic HTTP ingress configuration")
+ }
+ Boundary("K8S_SERVICE", "Service") {
+  Container('SERVICE', 'cloud.aws', 'http', "Generic HTTP service")
+ }
+ Boundary("K8S_CONFIGMAP", "Configmap") {
+  Container('CONFIGMAP_CREDENTIALS', 'cloud.aws_credentials', 'ini', "Credential files for Access ID and Secret")
+    Container('CONFIGMAP_CONFIG', 'cloud.aws_configuration', 'ini', "Configuration for AWS")
+ }
+ Boundary("K8S_VOLUME", "Volume") {
+ }
+ Boundary("K8S_DEPLOYMENT", "Deployment") {
+ Boundary("K8S_POD", "Pod") {
+  Container_Boundary("AWSC", "AWS Client") {
+   Container("AWSC", "AWS Client", "container", "AWS Client Container")
+  }
+}
+Container_Ext("AWS", "AWS", "Cloud")
+
+Rel_R("AWSC", "AWS", "Controls")
+Rel_R("AWSC", "AWS_IAM", "Authenticates")
+Rel_R("AWSC", "AWS_S3", "Manages")
+Rel_R("AWSC", "AWS_EC2", "Manages")
+Rel_R("AWS_IAM", "AWS_S3", "Allows Access")
+Rel_R("AWS_IAM", "AWS_EC2", "Allows Access")
+Lay_R("K8S_INGRESS", "K8S_SERVICE")
+Lay_R("K8S_SERVICE", "K8S_DEPLOYMENT")
+Lay_R("K8S_SERVICE", "K8S_STATEFULSET")
+Lay_D("K8S_SERVICE", "K8S_CONFIGMAP")
+Lay_D("K8S_POD", "K8S_VOLUMES")
+
+@enduml
+
